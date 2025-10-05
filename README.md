@@ -13,8 +13,8 @@ Welcome to the CKA exam preparation repository! This repository contains study m
 
 ## Daily Study Materials
 
-- [Day 1: Docker / Demo App](./day1_Docker/readme.md)
-- [Day 2: Deployment](./day2_Deployment/readme.md)
+- [Day 1: Docker / Demo App](https://github.com/kamleshbelote/k8s_minikube-public/blob/main/day1_Docker/readme.md)
+- [Day 2: Deployment](https://github.com/kamleshbelote/k8s_minikube-public/blob/main/day2_Deployment/readme.md)
 
 ## Repository Structure
 
