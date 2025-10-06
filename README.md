@@ -31,3 +31,4 @@ When adding new day folders, please:
 1. Create a folder named `dayN_Topic` (e.g., `day4_ConfigMaps`)
 2. Include a `readme.md` in the folder describing the day's objectives and exercises
 3. Add a link to the new day in the "Daily Study Materials" section above
+   
