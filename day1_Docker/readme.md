@@ -1,95 +1,69 @@
-# Demo App Deployment Guide
+# Day 1 - Docker & Demo App
 
-This document provides step-by-step instructions for building, pushing to Docker Hub, and deploying the FastAPI demo application to Minikube.
+This directory contains materials for Day 1: building, containerizing, and deploying a FastAPI demo application.
 
-## 1. Building the Docker Image Locally
+## Objectives
 
-Navigate to the demoApp directory and build the image:
+- Build and run a FastAPI demo application locally
+- Create Docker images and push to Docker Hub
+- Deploy containerized applications to Minikube
+- Understand Docker basics and container workflows
 
-```bash
-cd day1_Docker/demoApp
-docker build -t demoapp:latest .
-```
+## Files
 
-## 2. Pushing to Docker Hub
+- `readme.md` - This file
+- `Dockerfile` - Docker image build instructions for the demo app
+- `demoApp/` - FastAPI demo application directory (see demoApp/readme.md for details)
 
-### Step 1: Tag the Image with Your Docker Hub Username
+## Quick Start
 
-```bash
-# Replace "yourusername" with your actual Docker Hub username
-docker tag demoapp:latest yourusername/demoapp:latest
-```
-
-### Step 2: Login to Docker Hub
-
-Before pushing images to Docker Hub, you need to authenticate with your Docker Hub account.
-
-```bash
-# Interactive login (will prompt for username and password)
-docker login
-
-# Or specify username directly (will still prompt for password)
-docker login --username yourusername
-
-# For CI/CD environments or scripts (not recommended for security reasons)
-# docker login --username yourusername --password yourpassword
-```
-
-You can also use a personal access token instead of your password for added security:
-
-1. Create a token on Docker Hub:
-   - Go to https://hub.docker.com/settings/security
-   - Click "New Access Token"
-   - Enter a description and select appropriate permissions
-   - Copy the generated token
-
-2. Use the token for login:
+1. **Run the app locally** (see `demoApp/readme.md` for detailed instructions):
    ```bash
-   docker login --username yourusername
-   # When prompted for password, paste your access token
+   cd demoApp
+   python3 -m venv .venv
+   source .venv/bin/activate
+   pip install -r requirements.txt
+   uvicorn main:app --reload
    ```
 
-To verify you've logged in successfully:
+2. **Build Docker image**:
+   ```bash
+   # From the demoApp directory
+   docker build -t yourusername/demoapp:latest .
+   ```
 
-```bash
-docker info | grep -A1 "Username"
-```
+3. **Push to Docker Hub**:
+   ```bash
+   docker login
+   docker push yourusername/demoapp:latest
+   ```
 
-### Step 3: Push the Image to Docker Hub
+4. **Deploy to Minikube**:
+   ```bash
+   # Build image directly in minikube
+   cd demoApp
+   minikube image build -t demoapp:latest .
+   ```
 
-```bash
-# Replace "yourusername" with your actual Docker Hub username
-docker push yourusername/demoapp:latest
-```
+## Directory Structure
 
-## Alternative: Build image directly into Minikube
+- `demoApp/` - Contains the FastAPI application code, requirements, and Dockerfile
+  - `main.py` - FastAPI application
+  - `requirements.txt` - Python dependencies
+  - `Dockerfile` - Container build instructions
+  - `static/` - Static files (favicon)
+  - `readme.md` - Detailed instructions for running the app
 
-If you prefer not to push to Docker Hub while developing, you can build the image directly into Minikube so the cluster can use it without pulling from a remote registry:
+## Demo App Features
 
-```bash
-# From repository root or the demoApp directory
-cd day1_Docker/demoApp
-minikube image build -t demoapp:latest -f Dockerfile .
-```
+The FastAPI demo app includes:
+- Root endpoint (`/`) - Welcome message
+- Health check (`/healthz`) - Application health status
+- Readiness check (`/readiness`) - Application readiness status
+- Static files (`/static/favicon.svg`) - Sample static content
 
-This places the image into Minikube's local registry and you can use `image: demoapp:latest` with `imagePullPolicy: IfNotPresent` in your Deployment.
+## Next Steps
 
-## Private registry / imagePullSecrets
-
-If you push the image to a private Docker Hub repository (or any private registry), create a Kubernetes secret and reference it in your deployment:
-
-```bash
-kubectl create secret docker-registry regcred \
-   --docker-server=https://index.docker.io/v1/ \
-   --docker-username=yourusername \
-   --docker-password=yourpassword \
-   --docker-email=your.email@example.com
-```
-
-Then add to your pod spec:
-
-```yaml
-spec:
-   imagePullSecrets:
-   - name: regcred
-```
+- See Day 2 for Kubernetes Deployment examples
+- See Day 3 for Kubernetes Service examples
+- Learn about container best practices and multi-stage builds
