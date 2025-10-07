@@ -258,6 +258,117 @@
         </div>
         <button class="btn" onclick="saveDiagram('diagram5', 'minikube-architecture')">Download PNG</button>
     </div>
+    
+    <h2>6. Control Plane and Worker Node with Pods</h2>
+    <div class="diagram-container">
+        <div class="mermaid" id="diagram6">
+            graph TD
+                subgraph "Control Plane / Master Node"
+                    style ControlPlane fill:#e6f3ff,stroke:#0066cc,stroke-width:2px
+                    API[API Server] --- ETCD[etcd]
+                    API --- CM[Controller Manager]
+                    API --- SCH[Scheduler]
+                    API --- CCM[Cloud Controller<br>Manager]
+                    
+                    subgraph "Control Plane Components"
+                        style ControlComponents fill:#d1e7ff,stroke:#0066cc,stroke-dasharray: 5 5
+                        API
+                        ETCD
+                        CM
+                        SCH
+                        CCM
+                    end
+                end
+                
+                subgraph "Worker Node 1"
+                    style WorkerNode1 fill:#f0fff0,stroke:#009900,stroke-width:2px
+                    KL1[kubelet] --> API
+                    KP1[kube-proxy] --> API
+                    CR1[Container Runtime]
+                    KL1 --> CR1
+                    
+                    subgraph "System Components"
+                        style SystemComponents fill:#e6ffe6,stroke:#009900,stroke-dasharray: 5 5
+                        KL1
+                        KP1
+                        CR1
+                    end
+                    
+                    subgraph "Pods"
+                        style Pods fill:#f9f9f9,stroke:#666666
+                        POD1[Pod 1]
+                        POD2[Pod 2]
+                        
+                        subgraph "Pod 1 Containers"
+                            style Pod1Containers fill:#ffffff,stroke:#999999
+                            C1[App Container]
+                            C2[Sidecar Container]
+                        end
+                        
+                        subgraph "Pod 2 Containers"
+                            style Pod2Containers fill:#ffffff,stroke:#999999
+                            C3[App Container]
+                            C4[Init Container]
+                        end
+                        
+                        POD1 --> C1
+                        POD1 --> C2
+                        POD2 --> C3
+                        POD2 --> C4
+                    end
+                    
+                    KL1 --> POD1
+                    KL1 --> POD2
+                end
+                
+                subgraph "Worker Node 2"
+                    style WorkerNode2 fill:#fff0f0,stroke:#990000,stroke-width:2px
+                    KL2[kubelet] --> API
+                    KP2[kube-proxy] --> API
+                    CR2[Container Runtime]
+                    KL2 --> CR2
+                    
+                    subgraph "System Components 2"
+                        style SystemComponents2 fill:#ffe6e6,stroke:#990000,stroke-dasharray: 5 5
+                        KL2
+                        KP2
+                        CR2
+                    end
+                    
+                    subgraph "Pods 2"
+                        style Pods2 fill:#f9f9f9,stroke:#666666
+                        POD3[Pod 3]
+                        POD4[Pod 4]
+                        
+                        subgraph "Pod 3 Containers"
+                            style Pod3Containers fill:#ffffff,stroke:#999999
+                            C5[App Container]
+                            C6[Sidecar Container]
+                        end
+                        
+                        subgraph "Pod 4 Containers"
+                            style Pod4Containers fill:#ffffff,stroke:#999999
+                            C7[App Container]
+                        end
+                        
+                        POD3 --> C5
+                        POD3 --> C6
+                        POD4 --> C7
+                    end
+                    
+                    KL2 --> POD3
+                    KL2 --> POD4
+                end
+                
+                CNI[CNI Network Plugin] -.-> KL1
+                CNI -.-> KL2
+                
+                SVC[Service] --- API
+                SVC --- POD1
+                SVC --- POD3
+        </div>
+        <button class="btn" onclick="saveDiagram('diagram6', 'control-worker-pods')">Download PNG</button>
+    </div>
 
     <script>
         mermaid.initialize({

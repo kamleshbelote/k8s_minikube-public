@@ -1,0 +1,110 @@
+# Kubernetes Architecture Diagram (Text Format)
+
++-----------------------------------------------------------------------------------------------+
+|                                   KUBERNETES CLUSTER                                           |
++-----------------------------------------------------------------------------------------------+
+
++-----------------------------------------------------------------------------------------------+
+|                                    CONTROL PLANE (MASTER)                                      |
+|  +-------------------+  +-------------------+  +-------------------+  +-------------------+    |
+|  |                   |  |                   |  |                   |  |                   |    |
+|  |    API Server     |  |       etcd        |  |  Controller       |  |    Scheduler      |    |
+|  |                   |  |   (Key-Value      |  |   Manager         |  |                   |    |
+|  | - Authentication  |  |     Store)        |  | - Node Controller |  | - Pod-to-Node     |    |
+|  | - Authorization   |  |                   |  | - Replica Cntrllr |  |   assignment      |    |
+|  | - Admission Ctrl  |  | - Cluster state   |  | - Endpoint Cntrl  |  | - Resource        |    |
+|  | - API Registration|  | - Configuration   |  | - Service Account |  |   requirements    |    |
+|  |                   |  |                   |  | - Token Controller|  |                   |    |
+|  +-------------------+  +-------------------+  +-------------------+  +-------------------+    |
+|                                                                                               |
++-----------------------------------------------------------------------------------------------+
+                                          ^
+                                          |
+                                     API calls
+                                          |
+                                          v
++-----------------------------------------------------------------------------------------------+
+|                                    WORKER NODE 1                                               |
+|  +-------------------+  +-------------------+  +---------------------------------------+      |
+|  |                   |  |                   |  |              CONTAINER RUNTIME         |      |
+|  |     kubelet       |  |    kube-proxy     |  |  +---------------+  +---------------+ |      |
+|  |                   |  |                   |  |  |     POD 1     |  |     POD 2     | |      |
+|  | - Watches API     |  | - Network proxy   |  |  | +--------+    |  | +--------+    | |      |
+|  |   server for      |  | - Service         |  |  | |Container|   |  | |Container|   | |      |
+|  |   pod changes     |  |   endpoints       |  |  | +--------+    |  | +--------+    | |      |
+|  | - Pod lifecycle   |  | - IP tables       |  |  | +--------+    |  | +--------+    | |      |
+|  | - Node status     |  |   /IPVS rules     |  |  | |Container|   |  | |Container|   | |      |
+|  |                   |  |                   |  |  | +--------+    |  | +--------+    | |      |
+|  +-------------------+  +-------------------+  |  +---------------+  +---------------+ |      |
+|                                               |                                       |      |
+|                                               +---------------------------------------+      |
+|                                                                                              |
++-----------------------------------------------------------------------------------------------+
+
++-----------------------------------------------------------------------------------------------+
+|                                    WORKER NODE 2                                               |
+|  +-------------------+  +-------------------+  +---------------------------------------+      |
+|  |                   |  |                   |  |              CONTAINER RUNTIME         |      |
+|  |     kubelet       |  |    kube-proxy     |  |  +---------------+  +---------------+ |      |
+|  |                   |  |                   |  |  |     POD 3     |  |     POD 4     | |      |
+|  | - Watches API     |  | - Network proxy   |  |  | +--------+    |  | +--------+    | |      |
+|  |   server for      |  | - Service         |  |  | |Container|   |  | |Container|   | |      |
+|  |   pod changes     |  |   endpoints       |  |  | +--------+    |  | +--------+    | |      |
+|  | - Pod lifecycle   |  | - IP tables       |  |  | +--------+    |  |              | |      |
+|  | - Node status     |  |   /IPVS rules     |  |  | |Container|   |  |              | |      |
+|  |                   |  |                   |  |  | +--------+    |  |              | |      |
+|  +-------------------+  +-------------------+  |  +---------------+  +---------------+ |      |
+|                                               |                                       |      |
+|                                               +---------------------------------------+      |
+|                                                                                              |
++-----------------------------------------------------------------------------------------------+
+
++-----------------------------------------------------------------------------------------------+
+|                               KUBERNETES NETWORKING                                            |
+|                                                                                               |
+|  +-------------------+     +-----------------+     +--------------------------------+         |
+|  | External Traffic  |     |                 |     |        SERVICES LAYER          |         |
+|  |                   | --> |  Load Balancer  | --> | (ClusterIP, NodePort, LoadBalancer)      |
+|  |                   |     |                 |     |                                |         |
+|  +-------------------+     +-----------------+     +--------------------------------+         |
+|                                                           |            |                      |
+|                                                           v            v                      |
+|                                              +---------------+    +---------------+           |
+|                                              |   ENDPOINT    |    |   ENDPOINT    |           |
+|                                              | (Pod IP:Port) |    | (Pod IP:Port) |           |
+|                                              +---------------+    +---------------+           |
+|                                                                                               |
++-----------------------------------------------------------------------------------------------+
+
++-----------------------------------------------------------------------------------------------+
+|                             KUBERNETES STORAGE                                                |
+|                                                                                               |
+|  +----------------------+    +-------------------------+    +------------------------+        |
+|  | PersistentVolumeClaim|    |    PersistentVolume    |    |  Storage Class        |        |
+|  | (Application request)|    | (Actual storage volume) |    | (Storage provisioner) |        |
+|  +----------------------+    +-------------------------+    +------------------------+        |
+|                                                                                               |
++-----------------------------------------------------------------------------------------------+
+
+# KEY CONCEPTS
+- Control Plane: Central management for the entire cluster (API Server, etcd, Controller Manager, Scheduler)
+- Worker Nodes: Where applications run inside containers organized as pods
+- Pods: Smallest deployable units in Kubernetes, containing one or more containers
+- Services: Abstraction layer that provides stable networking for pods
+- kubelet: Node agent that ensures containers are running in a pod
+- kube-proxy: Maintains network rules for service communication
+- Container Runtime: Software responsible for running containers (Docker, containerd, CRI-O)
+
+# COMPONENT RELATIONSHIPS
+1. Users interact with the API Server using kubectl or other clients
+2. API Server stores cluster state in etcd
+3. Controller Manager monitors cluster state and makes changes to reach desired state
+4. Scheduler assigns pods to nodes based on resource requirements and constraints
+5. kubelet on each node receives pod specifications and ensures containers are running
+6. kube-proxy maintains network rules to allow communication with pods from within or outside the cluster
+
+# COMMUNICATION FLOWS
+- External → Load Balancer → Services → Pods
+- kubectl → API Server → kubelet → Container Runtime
+- Controller Manager → API Server → kubelet
+- Scheduler → API Server → kubelet

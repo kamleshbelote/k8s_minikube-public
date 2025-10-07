@@ -5,8 +5,9 @@ This directory contains diagrams illustrating the architecture of Kubernetes com
 ## Contents
 
 1. [Kubernetes Architecture in Markdown](kubernetes-architecture.md) - Mermaid diagrams in Markdown format
-2. [HTML Renderer](k8s-architecture-renderer.html) - HTML page to render and save diagrams as PNG
-3. [Generate PNG Scripts](#generating-png-images) - Scripts to convert diagrams to PNG images
+2. [ASCII Kubernetes Architecture](Architecture.txt) - Text-based diagram viewable in any editor
+3. [HTML Renderer](k8s-architecture-renderer.html) - HTML page to render and save diagrams as PNG
+4. [Generate PNG Scripts](#generating-png-images) - Scripts to convert diagrams to PNG images
 
 ## Diagram Types
 
@@ -17,6 +18,7 @@ The following diagrams are included:
 3. **Service Architecture** - How Kubernetes services route traffic to pods
 4. **Deployment Process** - Sequence diagram of the deployment workflow
 5. **Minikube Architecture** - Structure of a Minikube cluster
+6. **ASCII Kubernetes Architecture** - Text-based diagram showing cluster components
 
 ## Generating PNG Images
 
@@ -63,3 +65,6 @@ A sequence diagram showing the workflow when creating a deployment, from the ini
 
 ### 5. Minikube Architecture
 Shows how Minikube sets up a single-node Kubernetes cluster for development and testing.
+
+### 6. ASCII Kubernetes Architecture
+A comprehensive text-based diagram showing the Kubernetes architecture, including control plane components, worker nodes, networking, and storage. This diagram can be viewed in any text editor without requiring special rendering tools.

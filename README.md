@@ -16,14 +16,15 @@ Welcome to the CKA exam preparation repository! This repository contains study m
 - [Day 1: Docker / Demo App](./day1_Docker/readme.md) - Build and run a FastAPI demo app, create Docker image and deploy to Minikube
 - [Day 2: Deployment](./day2_Deployment/readme.md) - Kubernetes deployment examples and manifests
 - [Day 3: Services](./day3_Service/readme.md) - Understanding and working with Kubernetes Services
-- [Day 4: Architecture](./day4_architecture/README.md) - Kubernetes architecture diagrams and visualizations
+- [Day 4: Architecture](./day4_Architecture/README.md) - Kubernetes architecture diagrams and visualizations
+  - [ASCII Kubernetes Architecture](./day4_Architecture/Architecture.txt) - Text-based architecture diagram
 
 ## Repository Structure
 
 - `day1_Docker/` - Day 1 materials: demo app, Dockerfile, and k8s manifests
 - `day2_Deployment/` - Day 2 deployment examples and manifests  
 - `day3_Service/` - Day 3 materials: Kubernetes Services examples and manifests
-- `day4_architecture/` - Day 4 materials: Kubernetes architecture diagrams and visualizations
+- `day4_Architecture/` - Day 4 materials: Kubernetes architecture diagrams and visualizations
 - `start_minikube.sh` - Script to start Minikube cluster
 - `minikube-ubuntu-installation.md` - Minikube installation documentation
 
