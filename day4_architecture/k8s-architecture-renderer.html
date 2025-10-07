@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kubernetes Architecture Diagrams</title>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10.6.1/dist/mermaid.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f5f5f5;
+        }
+        .diagram-container {
+            background-color: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            border-bottom: 2px solid #0066cc;
+            padding-bottom: 10px;
+        }
+        h2 {
+            color: #0066cc;
+            margin-top: 30px;
+        }
+        .instructions {
+            background-color: #e6f3ff;
+            padding: 15px;
+            border-left: 5px solid #0066cc;
+            margin: 20px 0;
+        }
+        .btn {
+            background-color: #0066cc;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-top: 10px;
+            margin-bottom: 20px;
+        }
+        .btn:hover {
+            background-color: #0055aa;
+        }
+    </style>
+</head>
+<body>
+    <h1>Kubernetes Architecture Diagrams</h1>
+    
+    <div class="instructions">
+        <p><strong>Instructions:</strong></p>
+        <p>1. Each diagram will render below. Wait for all diagrams to render completely.</p>
+        <p>2. Take a screenshot of each diagram for your PNG images.</p>
+        <p>3. Alternatively, right-click on each diagram and select "Save image as..." (if your browser supports it).</p>
+        <p>4. You can also use the "Download" buttons to save each diagram individually.</p>
+    </div>
+
+    <h2>1. High-Level Kubernetes Architecture</h2>
+    <div class="diagram-container">
+        <div class="mermaid" id="diagram1">
+            graph TD
+                subgraph "Control Plane Components"
+                    A[API Server] --> B[etcd]
+                    A --> C[Controller Manager]
+                    A --> D[Scheduler]
+                    A --> E[Cloud Controller Manager]
+                end
+                
+                subgraph "Worker Node 1"
+                    F[kubelet] --> A
+                    G[kube-proxy] --> A
+                    H[Container Runtime] --> F
+                    F --> I[Pods]
+                    I --> I1[Pod 1]
+                    I --> I2[Pod 2]
+                    I1 --> C1[Container 1]
+                    I1 --> C2[Container 2]
+                    I2 --> C3[Container 3]
+                end
+                
+                subgraph "Worker Node 2"
+                    J[kubelet] --> A
+                    K[kube-proxy] --> A
+                    L[Container Runtime] --> J
+                    J --> M[Pods]
+                    M --> M1[Pod 3]
+                    M --> M2[Pod 4]
+                    M1 --> C4[Container 4]
+                    M2 --> C5[Container 5]
+                    M2 --> C6[Container 6]
+                end
+                
+                N[External Load Balancer] --> A
+                O[Users/Clients] --> N
+                
+                subgraph "Add-ons"
+                    P[DNS]
+                    Q[Dashboard]
+                    R[Metrics Server]
+                    S[CNI Plugin]
+                end
+                
+                S -.-> F
+                S -.-> J
+                P -.-> A
+                Q -.-> A
+                R -.-> A
+        </div>
+        <button class="btn" onclick="saveDiagram('diagram1', 'high-level-k8s-architecture')">Download PNG</button>
+    </div>
+
+    <h2>2. Detailed Component Relationships</h2>
+    <div class="diagram-container">
+        <div class="mermaid" id="diagram2">
+            flowchart TD
+                subgraph "Control Plane"
+                    api[API Server] <--> etcd[(etcd)]
+                    api <--> sched[Scheduler]
+                    api <--> cm[Controller Manager]
+                    api <--> ccm[Cloud Controller Manager]
+                    
+                    sched -- "1. Watch for new pods" --> api
+                    sched -- "2. Assign node to pod" --> api
+                    cm -- "Watch resources" --> api
+                    cm -- "Maintain desired state" --> api
+                    ccm -- "Cloud provider integration" --> api
+                end
+                
+                subgraph "Worker Node"
+                    kubelet -- "Register node" --> api
+                    kubelet -- "Watch for assigned pods" --> api
+                    kubelet -- "Report status" --> api
+                    
+                    kubelet --> runtime[Container Runtime]
+                    kubelet -- "Create/manage" --> pods((Pods))
+                    
+                    kproxy[kube-proxy] -- "Watch for Services & Endpoints" --> api
+                    kproxy -- "Configure iptables/ipvs" --> network((Network Rules))
+                    
+                    pods -- "Run on" --> runtime
+                    
+                    kubelet -- "Create/configure" --> volumes[(Volumes)]
+                    volumes -- "Mounted to" --> pods
+                end
+                
+                subgraph "Networking Components"
+                    cni[CNI Plugin] -- "Configure" --> pod_network((Pod Network))
+                    cni -- "Allocate IPs" --> pods
+                    kproxy -- "Route service traffic" --> pod_network
+                end
+                
+                client[Client/kubectl] -- "Request" --> api
+                api -- "Authenticate & Authorize" --> client
+                api -- "Validate" --> client
+        </div>
+        <button class="btn" onclick="saveDiagram('diagram2', 'component-relationships')">Download PNG</button>
+    </div>
+
+    <h2>3. Service Architecture</h2>
+    <div class="diagram-container">
+        <div class="mermaid" id="diagram3">
+            flowchart LR
+                subgraph "User Access"
+                    client[Client]
+                end
+                
+                subgraph "Service Layer"
+                    svc[Service]
+                    ep[Endpoints]
+                    kp[kube-proxy]
+                end
+                
+                subgraph "Pod Layer"
+                    pod1[Pod 1]
+                    pod2[Pod 2]
+                    pod3[Pod 3]
+                end
+                
+                client -- "1. Request to Service IP/DNS" --> svc
+                svc -- "2. Tracked by" --> ep
+                ep -- "3. Lists pod IPs" --> kp
+                kp -- "4. Programs iptables rules" --> network((Network))
+                network -- "5. Routes traffic to" --> pod1
+                network -- "5. Routes traffic to" --> pod2
+                network -- "5. Routes traffic to" --> pod3
+                
+                pod1 -- "Register with" --> ep
+                pod2 -- "Register with" --> ep
+                pod3 -- "Register with" --> ep
+        </div>
+        <button class="btn" onclick="saveDiagram('diagram3', 'service-architecture')">Download PNG</button>
+    </div>
+
+    <h2>4. Deployment Process</h2>
+    <div class="diagram-container">
+        <div class="mermaid" id="diagram4">
+            sequenceDiagram
+                participant Client as Client/kubectl
+                participant API as API Server
+                participant Etcd as etcd
+                participant CM as Controller Manager
+                participant Sched as Scheduler
+                participant Kubelet as Kubelet
+                participant CR as Container Runtime
+                
+                Client->>API: Create Deployment
+                API->>Etcd: Store Deployment
+                API->>CM: Notify new Deployment
+                CM->>API: Create ReplicaSet
+                API->>Etcd: Store ReplicaSet
+                CM->>API: Create Pods
+                API->>Etcd: Store Pods
+                API->>Sched: Notify unscheduled Pods
+                Sched->>API: Assign Nodes to Pods
+                API->>Etcd: Update Pod with Node assignment
+                API->>Kubelet: Notify of assigned Pods
+                Kubelet->>CR: Create Containers
+                CR->>Kubelet: Container Status
+                Kubelet->>API: Update Pod Status
+                API->>Etcd: Store Pod Status
+        </div>
+        <button class="btn" onclick="saveDiagram('diagram4', 'deployment-process')">Download PNG</button>
+    </div>
+
+    <h2>5. Minikube Architecture</h2>
+    <div class="diagram-container">
+        <div class="mermaid" id="diagram5">
+            graph TD
+                subgraph "Host Machine"
+                    A[Minikube Command] --> B[Docker/VM Driver]
+                    B --> C[Minikube VM/Container]
+                    
+                    subgraph "Minikube VM/Container"
+                        D[Control Plane Components]
+                        E[Worker Node Components]
+                        F[Add-ons]
+                        
+                        D --> G[API Server]
+                        D --> H[etcd]
+                        D --> I[Controller Manager]
+                        D --> J[Scheduler]
+                        
+                        E --> K[kubelet]
+                        E --> L[kube-proxy]
+                        E --> M[Container Runtime]
+                        
+                        F --> N[Dashboard]
+                        F --> O[metrics-server]
+                        F --> P[storage-provisioner]
+                    end
+                end
+                
+                Q[kubectl] --> G
+        </div>
+        <button class="btn" onclick="saveDiagram('diagram5', 'minikube-architecture')">Download PNG</button>
+    </div>
+
+    <script>
+        mermaid.initialize({
+            startOnLoad: true,
+            theme: 'default',
+            securityLevel: 'loose',
+            fontFamily: 'Arial',
+            fontSize: 14
+        });
+
+        function downloadURI(uri, name) {
+            var link = document.createElement("a");
+            link.download = name;
+            link.href = uri;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        function saveDiagram(id, filename) {
+            const svg = document.querySelector(`#${id} svg`);
+            if (!svg) {
+                alert('Please wait for the diagram to fully render');
+                return;
+            }
+            
+            const svgData = new XMLSerializer().serializeToString(svg);
+            const canvas = document.createElement("canvas");
+            const ctx = canvas.getContext("2d");
+            
+            const img = new Image();
+            img.onload = function() {
+                canvas.width = img.width;
+                canvas.height = img.height;
+                ctx.drawImage(img, 0, 0);
+                const pngData = canvas.toDataURL("image/png");
+                downloadURI(pngData, filename + '.png');
+            };
+            
+            img.src = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svgData)));
+        }
+    </script>
+</body>
+</html>

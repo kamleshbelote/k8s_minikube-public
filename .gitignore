@@ -18,3 +18,4 @@ build/
 .eggs/
 pip-wheel-metadata/
 *.log
+*.sh
