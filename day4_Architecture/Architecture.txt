@@ -8,37 +8,44 @@
 |                                    CONTROL PLANE (MASTER)                                      |
 |  +-------------------+  +-------------------+  +-------------------+  +-------------------+    |
 |  |                   |  |                   |  |                   |  |                   |    |
-|  |    API Server     |  |       etcd        |  |  Controller       |  |    Scheduler      |    |
+|  |    API Server     |<-+->     etcd        |  |  Controller       |  |    Scheduler      |    |
 |  |                   |  |   (Key-Value      |  |   Manager         |  |                   |    |
 |  | - Authentication  |  |     Store)        |  | - Node Controller |  | - Pod-to-Node     |    |
 |  | - Authorization   |  |                   |  | - Replica Cntrllr |  |   assignment      |    |
-|  | - Admission Ctrl  |  | - Cluster state   |  | - Endpoint Cntrl  |  | - Resource        |    |
-|  | - API Registration|  | - Configuration   |  | - Service Account |  |   requirements    |    |
-|  |                   |  |                   |  | - Token Controller|  |                   |    |
+|  | - Admission Ctrl  |<-+-> Cluster state   |  | - Endpoint Cntrl  |  | - Resource        |    |
+|  | - API Registration|  | - Configuration   |<-+-> Service Account |<-+->  requirements   |    |
+|  |                   |<-+------------------->  | - Token Controller|<-+->                 |    |
 |  +-------------------+  +-------------------+  +-------------------+  +-------------------+    |
-|                                                                                               |
-+-----------------------------------------------------------------------------------------------+
-                                          ^
-                                          |
-                                     API calls
-                                          |
-                                          v
+|          ^   ^   ^                                      ^                      ^              |
+|          |   |   |                                      |                      |              |
++----------+---+---+--------------------------------------+----------------------+--------------+
+            |   |                                         |                      |
+            |   |                                         |                      |
+  API calls |   | Read/Write                Watch for     |                      | Pod 
+   kubectl  |   | State                      changes      |                      | scheduling
+            |   |                                         |                      |
+            v   v                                         v                      v
 +-----------------------------------------------------------------------------------------------+
 |                                    WORKER NODE 1                                               |
 |  +-------------------+  +-------------------+  +---------------------------------------+      |
 |  |                   |  |                   |  |              CONTAINER RUNTIME         |      |
 |  |     kubelet       |  |    kube-proxy     |  |  +---------------+  +---------------+ |      |
-|  |                   |  |                   |  |  |     POD 1     |  |     POD 2     | |      |
+|  |                   |<-|                   |  |  |     POD 1     |  |     POD 2     | |      |
 |  | - Watches API     |  | - Network proxy   |  |  | +--------+    |  | +--------+    | |      |
 |  |   server for      |  | - Service         |  |  | |Container|   |  | |Container|   | |      |
 |  |   pod changes     |  |   endpoints       |  |  | +--------+    |  | +--------+    | |      |
-|  | - Pod lifecycle   |  | - IP tables       |  |  | +--------+    |  | +--------+    | |      |
+|  | - Pod lifecycle   |->| - IP tables       |  |  | +--------+    |  | +--------+    | |      |
 |  | - Node status     |  |   /IPVS rules     |  |  | |Container|   |  | |Container|   | |      |
 |  |                   |  |                   |  |  | +--------+    |  | +--------+    | |      |
 |  +-------------------+  +-------------------+  |  +---------------+  +---------------+ |      |
-|                                               |                                       |      |
-|                                               +---------------------------------------+      |
-|                                                                                              |
+|         ^   |            ^                     |          ^                  ^        |      |
+|         |   |            |                     |          |                  |        |      |
+|         |   +----------->|                     |<---------+------------------+        |      |
+|         |                |                     |                                      |      |
+|         |                +-------------------->+                                      |      |
+|         |                                      |                                      |      |
+|  API Server              Network rules         | Container creation                   |      |
+|  Communication           updates               | & management                         |      |
 +-----------------------------------------------------------------------------------------------+
 
 +-----------------------------------------------------------------------------------------------+
@@ -46,17 +53,22 @@
 |  +-------------------+  +-------------------+  +---------------------------------------+      |
 |  |                   |  |                   |  |              CONTAINER RUNTIME         |      |
 |  |     kubelet       |  |    kube-proxy     |  |  +---------------+  +---------------+ |      |
-|  |                   |  |                   |  |  |     POD 3     |  |     POD 4     | |      |
+|  |                   |<-|                   |  |  |     POD 3     |  |     POD 4     | |      |
 |  | - Watches API     |  | - Network proxy   |  |  | +--------+    |  | +--------+    | |      |
 |  |   server for      |  | - Service         |  |  | |Container|   |  | |Container|   | |      |
 |  |   pod changes     |  |   endpoints       |  |  | +--------+    |  | +--------+    | |      |
-|  | - Pod lifecycle   |  | - IP tables       |  |  | +--------+    |  |              | |      |
+|  | - Pod lifecycle   |->| - IP tables       |  |  | +--------+    |  |              | |      |
 |  | - Node status     |  |   /IPVS rules     |  |  | |Container|   |  |              | |      |
 |  |                   |  |                   |  |  | +--------+    |  |              | |      |
 |  +-------------------+  +-------------------+  |  +---------------+  +---------------+ |      |
-|                                               |                                       |      |
-|                                               +---------------------------------------+      |
-|                                                                                              |
+|         ^   |            ^                     |          ^                  ^        |      |
+|         |   |            |                     |          |                  |        |      |
+|         |   +----------->|                     |<---------+------------------+        |      |
+|         |                |                     |                                      |      |
+|         |                +-------------------->+                                      |      |
+|         |                                      |                                      |      |
+|  API Server              Network rules         | Container creation                   |      |
+|  Communication           updates               | & management                         |      |
 +-----------------------------------------------------------------------------------------------+
 
 +-----------------------------------------------------------------------------------------------+
@@ -64,16 +76,31 @@
 |                                                                                               |
 |  +-------------------+     +-----------------+     +--------------------------------+         |
 |  | External Traffic  |     |                 |     |        SERVICES LAYER          |         |
-|  |                   | --> |  Load Balancer  | --> | (ClusterIP, NodePort, LoadBalancer)      |
-|  |                   |     |                 |     |                                |         |
-|  +-------------------+     +-----------------+     +--------------------------------+         |
-|                                                           |            |                      |
-|                                                           v            v                      |
-|                                              +---------------+    +---------------+           |
-|                                              |   ENDPOINT    |    |   ENDPOINT    |           |
-|                                              | (Pod IP:Port) |    | (Pod IP:Port) |           |
-|                                              +---------------+    +---------------+           |
-|                                                                                               |
+|  |                   | --> |  Load Balancer  | --> | (ClusterIP, NodePort, LoadBalancer) <----|-------+
+|  |                   |     |                 |     |                                |         |       |
+|  +-------------------+     +-----------------+     +--------------------------------+         |       |
+|                                                           |            |                      |       |
+|                                                           v            v                      |       |
+|                                              +---------------+    +---------------+           |       |
+|                                              |   ENDPOINT    |    |   ENDPOINT    |           |       |
+|                                              | (Pod IP:Port) |    | (Pod IP:Port) |           |       |
+|                                              +---------------+    +---------------+           |       |
+|                                                      ^                   ^                    |       |
+|                                                      |                   |                    |       |
+|                                                      |                   |                    |       |
+|        API SERVER tracks endpoints <-----------------+---------+         |                    |       |
+|        and service definitions                       |         |         |                    |       |
+|                 |                                    |         |         |                    |       |
+|                 |                                    |         |         |                    |       |
+|                 +------------------------------------+         +---------+--------------------+       |
+|                                                                                               |       |
+|        kube-proxy watches <-------------------------------------------------------------+     |       |
+|        service & endpoint                                                                |     |       |
+|        changes                                                                           |     |       |
+|                 |                                                                        |     |       |
+|                 |                                                                        |     |       |
+|                 +-------------------------> Updates network rules ------------------------+-----+       |
+|                                                                                               |       |
 +-----------------------------------------------------------------------------------------------+
 
 +-----------------------------------------------------------------------------------------------+
@@ -81,8 +108,20 @@
 |                                                                                               |
 |  +----------------------+    +-------------------------+    +------------------------+        |
 |  | PersistentVolumeClaim|    |    PersistentVolume    |    |  Storage Class        |        |
-|  | (Application request)|    | (Actual storage volume) |    | (Storage provisioner) |        |
+|  | (Application request)|<-->| (Actual storage volume) |<-->| (Storage provisioner) |        |
 |  +----------------------+    +-------------------------+    +------------------------+        |
+|          ^                             ^                              ^                      |
+|          |                             |                              |                      |
+|          |                             |                              |                      |
+|          |                             |                              |                      |
+|     Pod mounts <----+          Volume Controller          Dynamic Provisioner               |
+|     volume          |          binds PVC to PV            creates volumes                   |
+|                     |                                                                        |
+|  +-----------------+|+---------------------------------------------------------------+      |
+|  |                 ||                                                                |      |
+|  |  API Server manages all storage resources and their relationships                 |      |
+|  |                                                                                   |      |
+|  +-----------------------------------------------------------------------------------+      |
 |                                                                                               |
 +-----------------------------------------------------------------------------------------------+
 
@@ -97,7 +136,7 @@
 
 # COMPONENT RELATIONSHIPS
 1. Users interact with the API Server using kubectl or other clients
-2. API Server stores cluster state in etcd
+2. API Server stores cluster state in etcd (only API Server can directly communicate with etcd)
 3. Controller Manager monitors cluster state and makes changes to reach desired state
 4. Scheduler assigns pods to nodes based on resource requirements and constraints
 5. kubelet on each node receives pod specifications and ensures containers are running
@@ -108,3 +147,13 @@
 - kubectl → API Server → kubelet → Container Runtime
 - Controller Manager → API Server → kubelet
 - Scheduler → API Server → kubelet
+- kube-proxy → API Server (watches Services & Endpoints) → Updates network rules
+- API Server → etcd (read/write state)
+- kubelet → API Server (reports node/pod status)
+
+# SECURITY MODEL
+- API Server is the central security enforcement point
+- All components communicate with API Server over TLS
+- Components authenticate to API Server using certificates
+- API Server authorizes requests based on RBAC policies
+- etcd communication is restricted to API Server only for data integrity

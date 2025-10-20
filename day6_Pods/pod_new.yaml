@@ -1,0 +1,14 @@
+# Create from kubectl run nginx --image=nginx --dry-run=client -o yaml > day6_Pods/pod_new.yaml
+apiVersion: v1
+kind: Pod
+metadata:  
+  labels:
+    run: nginx
+  name: nginx
+spec:
+  containers:
+  - image: nginx
+    name: nginx    
+  dnsPolicy: ClusterFirst
+  restartPolicy: Always
+status: {}

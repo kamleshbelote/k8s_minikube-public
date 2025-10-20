@@ -1,0 +1,22 @@
+# This YAML file defines a Pod named 'demoapp-pod' with specific resource requests and limits for its container.
+kind: Pod
+apiVersion: v1
+metadata: 
+  name: demoapp-pod
+  labels:
+    app: demoapp
+    env: dev
+    type: frontend
+spec:
+  containers:
+  - name: demoapp-container
+    image: nginx:latest
+    ports:
+    - containerPort: 80
+    resources:
+      limits:
+        cpu: "500m"
+        memory: "256Mi"
+      requests:
+        cpu: "250m"
+        memory: "128Mi"
