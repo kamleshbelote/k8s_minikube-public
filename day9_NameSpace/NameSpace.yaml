@@ -1,0 +1,53 @@
+# NameSpace Creation in Kubernetes
+# This YAML file defines a Namespace resource in Kubernetes, which is used to organize resources within the cluster.
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: demo-namespace
+  labels:
+    name: demo-namespace
+    env: dev
+    team: demo-team
+---
+# This YAML file defines a Pod named 'demoapp-pod' with specific resource requests and limits for its container.
+kind: Pod
+apiVersion: v1
+metadata: 
+  name: demoapp-pod
+  namespace: demo-namespace
+  labels:
+    app: demoapp-namespace
+    env: dev
+    type: frontend
+spec:
+  containers:
+  - name: demoapp-container
+    image: nginx:latest
+    ports:
+    - containerPort: 80
+    resources:
+      limits:
+        cpu: "500m"
+        memory: "256Mi"
+      requests:
+        cpu: "250m"
+        memory: "128Mi"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: demoapp-service
+  namespace: demo-namespace
+  labels:
+    app: demoapp
+    env: dev
+spec:
+  type: ClusterIP
+  ports:
+  - port: 80
+    targetPort: 80
+  selector:
+    app: demoapp-namespace
+    env: dev
+    type: frontend
+---

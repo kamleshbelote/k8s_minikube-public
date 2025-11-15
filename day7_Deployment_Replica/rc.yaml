@@ -1,0 +1,22 @@
+# This is a Kubernetes ReplicationController configuration file. It defines a ReplicationController named "demoapp-rc" that manages a set of pods running the nginx:latest image. The ReplicationController ensures that there are always 3 replicas of the pod running at any given time.
+# ReplicationControllers are legacy version of controllers in Kubernetes. In modern Kubernetes deployments, it is recommended to use Deployments instead of ReplicationControllers for better management and scalability. However, this configuration serves as an example of how to define a ReplicationController to manage pod replicas. The pods created by this ReplicationController will have specific labels for identification and selection purposes.
+apiVersion: v1
+kind: ReplicationController
+metadata:
+  name: demoapp-rc
+  labels:
+    app: demoapp
+    env: dev
+spec:
+  template:
+    metadata: 
+      name: demoapp-pod
+      labels:
+        app: demoapp
+        env: dev
+        type: frontend
+    spec:
+      containers:
+      - name: demoapp-container
+        image: nginx:latest
+  replicas: 3

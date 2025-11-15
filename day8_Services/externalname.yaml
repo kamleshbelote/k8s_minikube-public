@@ -1,0 +1,14 @@
+# ExternalName Service Example
+# This service maps an internal service name to an external DNS name
+apiVersion: v1
+kind: Service
+metadata:
+  name: external-api-service
+  labels:
+    app: external-api
+spec:
+  type: ExternalName
+  # Replace this with any external service you want to access
+  externalName: awsterraformprojects.blogspot.com
+  # No selector needed for ExternalName services
+  # No ports needed for ExternalName services as it's just DNS mapping

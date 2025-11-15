@@ -1,0 +1,27 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: demoapp-job
+  labels:
+    app: demoapp-job
+    env: dev
+spec:
+  template:
+    metadata:
+      labels:
+        app: demoapp-job
+        env: dev
+    spec:
+      containers:
+      - name: pi
+        image: perl:5.34.0
+        command: ["perl",  "-Mbignum=bpi", "-wle", "print bpi(2000)"]
+        resources:
+          requests:
+            memory: "64Mi"
+            cpu: "100m"
+          limits:
+            memory: "128Mi"
+            cpu: "250m"
+      restartPolicy: Never
+  backoffLimit: 4

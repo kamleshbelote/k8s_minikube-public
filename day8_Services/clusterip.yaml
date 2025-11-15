@@ -1,0 +1,35 @@
+# NodePort Service Example
+# This YAML file defines a NodePort service that makes your application accessible from outside the cluster.
+
+# Specifies the Kubernetes API version to use (v1 is the core API group)
+apiVersion: v1
+
+# Defines this as a Service resource type in Kubernetes
+kind: Service
+
+# Metadata section contains service identification and organization information
+metadata:
+  # The name of the service, used to reference it within the cluster
+  name: demoapp-clusterip-svc
+  # Labels attached to the service itself (not used for pod selection)
+  labels:
+    app: demoapp-clusterip-svc  # Identifies this service as part of the demo application
+    env: dev                   # Indicates this is for development environment
+
+# Specification section defines how the service should behave
+spec:
+  # NodePort type makes the service accessible from outside the cluster
+  type: ClusterIP
+
+  # Port configuration section
+  ports:
+  - port: 80         # Port exposed internally within the cluster
+    targetPort: 80   # Port where your application is listening in the pod
+    
+
+  # Selector determines which pods will receive traffic from this service
+  selector:    
+    # Pods must have BOTH these labels to be included in this service
+    app: demoapp-deployment  # Must match the deployment's pod template label
+    env: dev                # Environment label must also match
+  

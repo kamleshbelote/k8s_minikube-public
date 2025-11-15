@@ -1,0 +1,113 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: scaling-demo
+  labels:
+    app: scaling-demo
+    type: web
+spec:
+  replicas: 1  # Initial replica count, will be managed by HPA
+  selector:
+    matchLabels:
+      app: scaling-demo
+  template:
+    metadata:
+      labels:
+        app: scaling-demo
+        type: web
+    spec:
+      containers:
+      - name: scaling-demo-container
+        image: registry.k8s.io/hpa-example
+        ports:
+        - name: http  # Named port for better readability
+          containerPort: 80
+          protocol: TCP
+        resources:
+          requests:
+            cpu: "50m"
+            memory: "256Mi"
+          limits:
+            cpu: "150m"
+            memory: "512Mi"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: scaling-demo-service
+  labels:
+    app: scaling-demo
+    type: web
+  annotations:
+    service.beta.kubernetes.io/description: "Load balancer for scaling demo application"
+spec:
+  selector:
+    app: scaling-demo
+  ports:
+  - name: http
+    protocol: TCP
+    port: 80
+    targetPort: http  # Using named port from pod spec
+  type: ClusterIP  # Changed from LoadBalancer since we're using Ingress
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: scaling-demo-ingress
+  labels:
+    app: scaling-demo
+    type: web
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+    nginx.ingress.kubernetes.io/ssl-redirect: "false"
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "false"
+spec:
+  ingressClassName: nginx
+  rules:
+  - host: scaling-demo.local
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: scaling-demo-service
+            port:
+              name: http  # Using named port from service
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: scaling-demo-hpa
+  labels:
+    app: scaling-demo
+    type: scaling
+  annotations:
+    description: "HPA configuration for scaling-demo application"
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: scaling-demo
+  minReplicas: 1
+  maxReplicas: 10
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 50
+  behavior:
+    scaleUp:
+      stabilizationWindowSeconds: 30  # Wait 30s before scaling up
+      policies:
+      - type: Pods
+        value: 2  # Add max 2 pods at a time
+        periodSeconds: 60
+    scaleDown:
+      stabilizationWindowSeconds: 300  # Wait 5m before scaling down
+      policies:
+      - type: Pods
+        value: 1  # Remove 1 pod at a time
+        periodSeconds: 60

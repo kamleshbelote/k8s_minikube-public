@@ -1,0 +1,29 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: demoapp-cronjob
+  labels:
+    app: demoapp-cronjob
+    env: dev
+spec:
+  schedule: "*/5 * * * *"  # Runs every 5 minutes
+  jobTemplate:
+    spec:
+      template:
+        metadata:
+          labels:
+            app: demoapp-cronjob
+            env: dev
+        spec:
+          containers:
+          - name: demoapp-cronjob-container
+            image: busybox:latest
+            command: ['sh', '-c', 'echo "Hello from the CronJob!"; date;']
+            resources:
+              requests:
+                memory: "32Mi"
+                cpu: "50m"
+              limits:
+                memory: "64Mi"
+                cpu: "100m"
+          restartPolicy: OnFailure 

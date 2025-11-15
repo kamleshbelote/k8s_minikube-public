@@ -1,0 +1,67 @@
+kind: Namespace
+apiVersion: v1
+metadata:
+  name: memory-demo
+  labels:
+    name: memory-demo    
+---
+kind: Pod
+apiVersion: v1
+metadata:
+  name: stree-pod
+  namespace: memory-demo
+spec:
+  containers:
+  - name: stree-container
+    image: polinux/stress
+    resources:
+      requests:
+        memory: "64Mi"
+        cpu: "250m"
+      limits:
+        memory: "200Mi"
+        cpu: "500m"
+    command: ["stress"]
+    args: ["--vm", "1", "--vm-bytes", "150M", "--vm-hang", "1"]
+
+
+---
+kind: Pod
+apiVersion: v1
+metadata:
+  name: stree-pod-extra
+  namespace: memory-demo
+spec:
+  containers:
+  - name: stree-container-extra
+    image: polinux/stress
+    resources:
+      requests:
+        memory: "64Mi"
+        cpu: "250m"
+      limits:
+        memory: "200Mi"
+        cpu: "500m"
+    command: ["stress"]
+    args: ["--vm", "1", "--vm-bytes", "150M", "--vm-hang", "1"]
+
+---
+kind: Pod
+apiVersion: v1
+metadata:
+  name: stree-pod-node
+  namespace: memory-demo
+spec:
+  containers:
+  - name: stree-container-node
+    image: polinux/stress
+    resources:
+      requests:
+        memory: "1Gi"
+        cpu: "250m"
+      limits:
+        memory: "1Gi"
+        cpu: "250m"
+    command: ["stress"]
+    args: ["--vm", "1", "--vm-bytes", "150M", "--vm-hang", "1"]
+  

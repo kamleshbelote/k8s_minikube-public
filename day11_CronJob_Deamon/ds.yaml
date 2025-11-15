@@ -1,0 +1,29 @@
+kind: DaemonSet
+apiVersion: apps/v1
+metadata:
+  name: demoapp-daemonset
+  labels:
+    app: demoapp-daemonset
+    env: dev
+spec:
+  template:
+    metadata:
+      labels:
+        app: demoapp-daemonset
+        env: dev
+    spec:
+      containers:
+      - name: demoapp-container
+        image: busybox:latest
+        command: ['sh', '-c', 'echo "Running the daemon application..."; sleep 3600;']
+        resources:
+          requests:
+            memory: "64Mi"
+            cpu: "100m"
+          limits:
+            memory: "128Mi"
+            cpu: "250m"
+  selector:
+    matchLabels:
+      app: demoapp-daemonset
+      env: dev
